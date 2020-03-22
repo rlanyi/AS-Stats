@@ -70,7 +70,7 @@ my @rrdfiles = File::Find::Rule->maxdepth(2)->file()->name('*.rrd')->in($rrdpath
 $|=1;
 
 my $num_workers	= 1;
-if (($ENV{'THREADS'} =~ /^\d+$/) and ($ENV{'THREADS'} > 0)) { 
+if (($ENV{'THREADS'}) and ($ENV{'THREADS'} =~ /^\d+$/) and ($ENV{'THREADS'} > 0)) { 
     $num_workers = $ENV{'THREADS'};
 }
 
