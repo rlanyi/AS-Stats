@@ -54,7 +54,7 @@ try {
 	my $sth = $db->prepare("SELECT asn, checked_at FROM stats") or die('field missing');
 	$sth->execute();
 	while(my($item, $data) = $sth->fetchrow_array()) {
-		as_list->{$item} = $data;
+		$as_list->{$item} = $data;
 	}
 
 	$db_version = 2;
@@ -86,6 +86,11 @@ foreach my $rrdfile (@rrdfiles) {
 	if ($rrdfile =~ /\/(\d+).rrd$/) {
 		my $task->{as} = $1;
 		$task->{filename} = $rrdfile;
+		if (! defined($as_list->{$1})) {
+			$task->{checked_at} = 0;
+		} else {
+			$task->{checked_at} = $as_list->{$1};
+		}
 		$q->enqueue($task);
 	}
 }
@@ -100,7 +105,7 @@ my @workers;
 for (1..$num_workers) {
 	push @workers, async {
 		while (defined(my $task = $q->dequeue())) {
-			if ($as_list->{$task->{as}} and (!(stat($task->{filename})->mtime > $as_list->{$task->{as}}))) {
+			if (stat($task->{filename})->mtime <= $task->{checked_at}) {
 				$skipped += 1;
 			} else {
 				my $result->{as} = $task->{as};
